@@ -2,8 +2,9 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const cors = require('cors');
 dotenv.config();
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 mongoose.connect(process.env.MONGO_DB_URI).then(() => {
     console.log('Connected to MongoDB');
@@ -13,6 +14,7 @@ mongoose.connect(process.env.MONGO_DB_URI).then(() => {
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
@@ -21,9 +23,11 @@ app.listen(5000, () => {
 //routes import
 const user = require('./routes/userRoute');
 const auth = require('./routes/authRoute');
+const note = require('./routes/noteRoute');
 
 app.use('/api/user', user);
 app.use('/api/auth', auth);
+app.use('/api/note', note);
 
 //error handling
 app.use((err,req,res,next) => {

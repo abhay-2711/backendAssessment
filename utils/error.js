@@ -1,8 +1,8 @@
 const errorHandler = (statusCode, message) => {
-    const error = new error();
-    error.statusCode = statusCode;
-    error.message = message;
-    return error;
+    const err = new Error();
+    err.statusCode = statusCode;
+    err.message = message;
+    return err;
 }
 
 module.exports = errorHandler;
