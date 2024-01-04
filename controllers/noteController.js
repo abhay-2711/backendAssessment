@@ -3,6 +3,7 @@ const Note = require('../models/Note');
 const createNote = async (req, res, next) => {
     const {title, content} = req.body;
     const newNote = new Note({
+        userId: req.user.id,
         title,
         content
     });
@@ -16,8 +17,9 @@ const createNote = async (req, res, next) => {
 }
 
 const getAllNotes = async (req, res, next) => {
+    const userId = req.user.id;
     try {
-        const notes = await Note.find();
+        const notes = await Note.find({ userId });
         res.status(200).json(notes);
     } catch (error) {
         next(error);
@@ -25,9 +27,16 @@ const getAllNotes = async (req, res, next) => {
 }
 
 const getNote = async (req, res, next) => {
-    const id = req.params.id;
+    const noteId = req.params.id;
+    const userId = req.user.id;
     try {
-        const note = await Note.findById(id);
+        const note = await Note.findById({_id: noteId, userId});
+        if (!note) {
+            return res.status(404).json({ message: 'Note not found' });
+        }
+        if (note.userId.toString() !== userId) {
+            return res.status(403).json({ message: 'Unauthorized access to this note' });
+        }
         res.status(200).json(note);
     } catch (error) {
         next(error);
@@ -36,12 +45,16 @@ const getNote = async (req, res, next) => {
 
 //update note
 const updateNote = async (req, res, next) => {
-    const id = req.params.id;
+    const noteId = req.params.id;
+    const userId = req.user.id;
     const {title, content} = req.body;
     try {
-        const note = await Note.findById(id);
+        const note = await Note.findById({_id: noteId, userId});
         if (!note) {
             return res.status(404).json({ message: 'Note not found' });
+        }
+        if (note.userId.toString() !== userId) {
+            return res.status(403).json({ message: 'Unauthorized access to this note' });
         }
 
         note.title = title;
@@ -55,12 +68,15 @@ const updateNote = async (req, res, next) => {
 };
 
 const deleteNote = async (req, res, next) => {
-    const id = req.params.id;
-
+    const noteId = req.params.id;
+    const userId = req.user.id;
     try {
-        const note = await Note.findByIdAndDelete(id);
+        const note = await Note.findByIdAndDelete({_id: noteId, userId});
         if (!note) {
             return res.status(404).json({ message: 'Note not found' });
+        }
+        if (note.userId.toString() !== userId) {
+            return res.status(403).json({ message: 'Unauthorized access to this note' });
         }
 
         res.status(200).json({ message: 'Note deleted successfully' });
