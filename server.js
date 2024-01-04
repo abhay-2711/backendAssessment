@@ -1,6 +1,8 @@
 const express = require('express');
+const app = express();
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const cors = require('cors');
 dotenv.config();
 
 mongoose.connect(process.env.MONGO_DB_URI).then(() => {
@@ -9,8 +11,38 @@ mongoose.connect(process.env.MONGO_DB_URI).then(() => {
     console.log(err);
 })
 
-const app = express();
+app.use(cors());
+app.use(express.json());
 
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+app.listen(5000, () => {
+    console.log('Server is running on port 5000');
 })
+
+//routes import
+const user = require('./routes/userRoute');
+const auth = require('./routes/authRoute');
+
+app.use('/api/user', user);
+app.use('/api/auth', auth);
+
+//error handling
+app.use((err,req,res,next) => {
+    console.error(err);
+    const statusCode = err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    return res.status(statusCode).json({
+        success: false,
+        error : message,
+        statusCode: statusCode,
+    })
+})
+
+//404 error handling
+app.get("*", (req,res)=>{
+    res.status(404).json({
+        message: "Route not found",
+        status: 404
+    })
+})
+
+module.exports = app;
